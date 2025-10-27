@@ -1,6 +1,7 @@
 package su.nightexpress.excellentcrates.crate.menu;
 
 import org.bukkit.Material;
+import org.bukkit.Sound; // Added import for Sound
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
