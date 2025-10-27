@@ -9,6 +9,8 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentcrates.CratesPlugin;
 import su.nightexpress.excellentcrates.api.crate.Reward;
 import su.nightexpress.excellentcrates.config.Config; // Added import for Config
+import su.nightexpress.excellentcrates.config.Perms; // Added import for Perms
+import su.nightexpress.excellentcrates.crate.cost.Cost; // Added import for Cost
 import su.nightexpress.excellentcrates.crate.impl.Crate;
 import su.nightexpress.excellentcrates.crate.impl.CrateSource;
 import su.nightexpress.excellentcrates.crate.impl.OpenOptions; // Added import for OpenOptions
@@ -183,7 +185,7 @@ public class PreviewMenu extends LinkedMenu<CratesPlugin, CrateSource> implement
 
             // Determine max openings based on the first available cost or default limit
             int maxOpenings = crate.getCosts().stream()
-                                  .filter(Cost::isAvailable)
+                                  .filter(Cost::isAvailable) // Use Cost::isAvailable
                                   .mapToInt(cost -> cost.countMaxOpenings(player))
                                   .findFirst() // Use first valid cost to determine max openings for mass open
                                   .orElse(Config.MASS_OPENING_LIMIT.get()); // Fallback to config limit if no cost or can't determine
@@ -200,7 +202,7 @@ public class PreviewMenu extends LinkedMenu<CratesPlugin, CrateSource> implement
         }, ItemOptions.builder().setVisibilityPolicy(viewer -> {
              // Show mass open button only if the feature is enabled and the player has permission
              Player player = viewer.getPlayer();
-             return Config.isMassOpenEnabled() && player.hasPermission(Perms.MASS_OPEN);
+             return Config.isMassOpenEnabled() && player.hasPermission(Perms.MASS_OPEN); // Use Perms.MASS_OPEN
         }).build()));
         // *** End of mass_open handler addition ***
 
