@@ -7,13 +7,15 @@ import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.MenuType;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentcrates.CratesPlugin;
+import su.nightexpress.excellentcrates.Placeholders; // Added import for Placeholders
 import su.nightexpress.excellentcrates.api.crate.Reward;
-import su.nightexpress.excellentcrates.config.Config; // Added import for Config
-import su.nightexpress.excellentcrates.config.Perms; // Added import for Perms
-import su.nightexpress.excellentcrates.crate.cost.Cost; // Added import for Cost
+import su.nightexpress.excellentcrates.config.Config;
+import su.nightexpress.excellentcrates.config.Lang; // Added import for Lang
+import su.nightexpress.excellentcrates.config.Perms;
+import su.nightexpress.excellentcrates.crate.cost.Cost;
 import su.nightexpress.excellentcrates.crate.impl.Crate;
 import su.nightexpress.excellentcrates.crate.impl.CrateSource;
-import su.nightexpress.excellentcrates.crate.impl.OpenOptions; // Added import for OpenOptions
+import su.nightexpress.excellentcrates.crate.impl.OpenOptions;
 import su.nightexpress.excellentcrates.util.InteractType;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
@@ -33,6 +35,8 @@ import su.nightexpress.nightcore.util.placeholder.Replacer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional; // Added import for Optional
+import java.util.stream.Collectors; // Added import for Collectors
 
 import static su.nightexpress.excellentcrates.Placeholders.*;
 import static su.nightexpress.nightcore.util.text.night.wrapper.TagWrappers.*;
@@ -183,21 +187,49 @@ public class PreviewMenu extends LinkedMenu<CratesPlugin, CrateSource> implement
             Player player = viewer.getPlayer();
             Crate crate = source.getCrate();
 
-            // Determine max openings based on the first available cost or default limit
-            int maxOpenings = crate.getCosts().stream()
-                                  .filter(Cost::isAvailable) // Use Cost::isAvailable
-                                  .mapToInt(cost -> cost.countMaxOpenings(player))
-                                  .findFirst() // Use first valid cost to determine max openings for mass open
-                                  .orElse(Config.MASS_OPENING_LIMIT.get()); // Fallback to config limit if no cost or can't determine
+            // *** Check affordability ***
+            Optional<Cost> firstAffordableCostOpt = crate.getCosts().stream()
+                    .filter(Cost::isAvailable)
+                    .filter(cost -> cost.canAfford(player))
+                    .findFirst();
+
+            Cost costToUse = firstAffordableCostOpt.orElse(null); // Get the cost or null if none affordable/available
+
+            // If the crate has costs AND the player cannot afford *any* of them
+            if (crate.hasCost() && costToUse == null) {
+                // Find the first defined cost to display in the message, even if unaffordable
+                Cost firstCost = crate.getFirstCost().orElse(null);
+                if (firstCost != null) {
+                    Lang.CRATE_OPEN_TOO_EXPENSIVE.message().send(player, replacer -> replacer
+                            .replace(crate.replacePlaceholders())
+                            .replace(Placeholders.GENERIC_COSTS, () -> firstCost.formatInline(", ")) // Show the first cost
+                    );
+                } else {
+                     // Fallback if somehow no costs are defined but hasCost() was true (shouldn't happen)
+                     player.sendMessage("You cannot afford to open this crate."); // Consider adding a Lang entry
+                }
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f); // Play feedback sound
+                return; // Stop execution
+            }
+            // *** End affordability check ***
+
+            // Determine max openings based on the affordable cost or default limit
+            int maxOpenings = (costToUse != null)
+                    ? costToUse.countMaxOpenings(player)
+                    : Config.MASS_OPENING_LIMIT.get(); // If free, use config limit
 
             int amountToOpen = Math.min(maxOpenings, Config.MASS_OPENING_LIMIT.get()); // Ensure it doesn't exceed global limit
 
-            if (amountToOpen <= 0) return; // Don't proceed if player can't open any
+            if (amountToOpen <= 0) {
+                 // Send a message if they can afford but the calculated amount is somehow zero
+                 player.sendMessage("You don't have enough resources to open any crates."); // Consider adding a Lang entry
+                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                 return; // Stop execution
+            }
 
             this.runNextTick(() -> {
                 player.closeInventory();
-                // Use the first available cost for mass opening, or null if no cost/free
-                plugin.getCrateManager().multiOpenCrate(player, source, OpenOptions.empty(), crate.getFirstCost().orElse(null), amountToOpen);
+                plugin.getCrateManager().multiOpenCrate(player, source, OpenOptions.empty(), costToUse, amountToOpen); // Use the determined cost
             });
         }, ItemOptions.builder().setVisibilityPolicy(viewer -> {
              // Show mass open button only if the feature is enabled and the player has permission
