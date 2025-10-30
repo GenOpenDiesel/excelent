@@ -210,6 +210,7 @@ public class PreviewMenu extends LinkedMenu<CratesPlugin, CrateSource> implement
                      player.sendMessage("You cannot afford to open this crate."); // Consider adding a Lang entry
                 }
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f); // Play feedback sound
+                player.closeInventory(); // <-- POPRAWKA
                 return; // Stop execution
             }
             // *** End affordability check ***
@@ -225,6 +226,7 @@ public class PreviewMenu extends LinkedMenu<CratesPlugin, CrateSource> implement
                  // Send a message if they can afford but the calculated amount is somehow zero
                  player.sendMessage("You don't have enough resources to open any crates."); // Consider adding a Lang entry
                  player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                 player.closeInventory(); // <-- POPRAWKA
                  return; // Stop execution
             }
 
