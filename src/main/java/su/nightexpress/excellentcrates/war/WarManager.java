@@ -349,21 +349,21 @@ public class WarManager extends AbstractManager<CratesPlugin> {
         Player finalWinner = winner;
 
         // Show the CS:GO-style battle to both players, then pay out once the animation lands.
-        if (Config.WAR_ANIMATION_ENABLED.get() && challengerScore.bestReward != null && targetScore.bestReward != null) {
+        if (Config.WAR_ANIMATION_ENABLED.get() && !challengerScore.rewards.isEmpty() && !targetScore.rewards.isEmpty()) {
             String winnerName = winner == null ? null : winner.getName();
 
             new WarBattleMenu(this.plugin, challenger, target, crate,
-                challengerScore.bestReward, targetScore.bestReward,
-                challengerScore.total, targetScore.total, winnerName).start();
+                challengerScore.rewards, challengerScore.pointsArray(),
+                targetScore.rewards, targetScore.pointsArray(), winnerName).start();
 
             new WarBattleMenu(this.plugin, target, challenger, crate,
-                targetScore.bestReward, challengerScore.bestReward,
-                targetScore.total, challengerScore.total, winnerName).start();
+                targetScore.rewards, targetScore.pointsArray(),
+                challengerScore.rewards, challengerScore.pointsArray(), winnerName).start();
 
             this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
                 this.payout(challenger, target, challengerScore, targetScore, finalWinner);
                 this.sendResult(challenger, target, crate, challengerScore, targetScore, finalWinner);
-            }, WarBattleMenu.DURATION_TICKS + 20L);
+            }, WarBattleMenu.durationTicks(amount) + 20L);
             return;
         }
 
@@ -402,6 +402,7 @@ public class WarManager extends AbstractManager<CratesPlugin> {
             double chance = Math.max(reward.getRollChance(player), 0.0001D);
             double points = 100D / chance;
 
+            score.points.add(points);
             score.total += points;
             if (points > score.best || score.bestReward == null) {
                 score.best = points;
@@ -440,9 +441,16 @@ public class WarManager extends AbstractManager<CratesPlugin> {
 
     private static class WarScore {
         private final List<Reward> rewards = new ArrayList<>();
+        private final List<Double> points = new ArrayList<>();
         private double total;
         private double best;
         private Reward bestReward;
+
+        private double[] pointsArray() {
+            double[] array = new double[this.points.size()];
+            for (int i = 0; i < array.length; i++) array[i] = this.points.get(i);
+            return array;
+        }
     }
 
     private record PendingChallenge(@NotNull String crateId, int amount, long expireAt) {
