@@ -3,6 +3,8 @@ package su.nightexpress.excellentcrates.war;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentcrates.CratesPlugin;
@@ -24,6 +26,20 @@ public class WarListener extends AbstractListener<CratesPlugin> {
 
         // Consume the typed opponent name so it isn't broadcast to global chat.
         if (this.manager.handleTargetInput(player, event.getMessage())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBattleClick(@NotNull InventoryClickEvent event) {
+        if (event.getInventory().getHolder() instanceof WarBattleMenu) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBattleDrag(@NotNull InventoryDragEvent event) {
+        if (event.getInventory().getHolder() instanceof WarBattleMenu) {
             event.setCancelled(true);
         }
     }

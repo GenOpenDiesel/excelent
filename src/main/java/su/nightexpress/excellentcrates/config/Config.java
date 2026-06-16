@@ -122,6 +122,12 @@ public class Config {
         "Whether the outcome of a finished war is broadcast to the whole server."
     );
 
+    public static final ConfigValue<Boolean> WAR_ANIMATION_ENABLED = ConfigValue.create("CrateWar.Animation.Enabled",
+        true,
+        "Whether to show the CS:GO-style battle animation when a war is resolved.",
+        "Top row = opponent's roll, bottom row = your roll. When disabled, rewards are given instantly."
+    );
+
 
     public static final ConfigValue<Integer> CRATE_SAVE_INTERVAL = ConfigValue.create("Crate.SaveInterval",
         300,

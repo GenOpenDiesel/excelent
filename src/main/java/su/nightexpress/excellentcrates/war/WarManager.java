@@ -333,37 +333,60 @@ public class WarManager extends AbstractManager<CratesPlugin> {
 
         // Winner = higher total rarity score. Tie is broken by the single rarest reward.
         Player winner = null;
-        Player loser = null;
         if (challengerScore.total > targetScore.total) {
-            winner = challenger; loser = target;
+            winner = challenger;
         }
         else if (targetScore.total > challengerScore.total) {
-            winner = target; loser = challenger;
+            winner = target;
         }
         else if (challengerScore.best > targetScore.best) {
-            winner = challenger; loser = target;
+            winner = challenger;
         }
         else if (targetScore.best > challengerScore.best) {
-            winner = target; loser = challenger;
+            winner = target;
         }
 
+        Player finalWinner = winner;
+
+        // Show the CS:GO-style battle to both players, then pay out once the animation lands.
+        if (Config.WAR_ANIMATION_ENABLED.get() && challengerScore.bestReward != null && targetScore.bestReward != null) {
+            String winnerName = winner == null ? null : winner.getName();
+
+            new WarBattleMenu(this.plugin, challenger, target, crate,
+                challengerScore.bestReward, targetScore.bestReward,
+                challengerScore.total, targetScore.total, winnerName).start();
+
+            new WarBattleMenu(this.plugin, target, challenger, crate,
+                targetScore.bestReward, challengerScore.bestReward,
+                targetScore.total, challengerScore.total, winnerName).start();
+
+            this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
+                this.payout(challenger, target, challengerScore, targetScore, finalWinner);
+                this.sendResult(challenger, target, crate, challengerScore, targetScore, finalWinner);
+            }, WarBattleMenu.DURATION_TICKS + 20L);
+            return;
+        }
+
+        this.payout(challenger, target, challengerScore, targetScore, winner);
+        this.sendResult(challenger, target, crate, challengerScore, targetScore, winner);
+    }
+
+    private void payout(@NotNull Player challenger,
+                        @NotNull Player target,
+                        @NotNull WarScore challengerScore,
+                        @NotNull WarScore targetScore,
+                        @Nullable Player winner) {
         if (winner == null) {
             // Perfect draw: everyone keeps their own rolled rewards.
             challengerScore.rewards.forEach(reward -> reward.giveContent(challenger));
             targetScore.rewards.forEach(reward -> reward.giveContent(target));
-
-            this.sendResult(challenger, target, crate, challengerScore, targetScore, null);
             return;
         }
 
         // Winner takes everything: both their own and the opponent's rolled rewards.
         List<Reward> spoils = new ArrayList<>(challengerScore.rewards);
         spoils.addAll(targetScore.rewards);
-
-        Player finalWinner = winner;
-        spoils.forEach(reward -> reward.giveContent(finalWinner));
-
-        this.sendResult(challenger, target, crate, challengerScore, targetScore, winner);
+        spoils.forEach(reward -> reward.giveContent(winner));
     }
 
     @NotNull
@@ -380,7 +403,10 @@ public class WarManager extends AbstractManager<CratesPlugin> {
             double points = 100D / chance;
 
             score.total += points;
-            if (points > score.best) score.best = points;
+            if (points > score.best || score.bestReward == null) {
+                score.best = points;
+                score.bestReward = reward;
+            }
         }
         return score;
     }
@@ -416,6 +442,7 @@ public class WarManager extends AbstractManager<CratesPlugin> {
         private final List<Reward> rewards = new ArrayList<>();
         private double total;
         private double best;
+        private Reward bestReward;
     }
 
     private record PendingChallenge(@NotNull String crateId, int amount, long expireAt) {
