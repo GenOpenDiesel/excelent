@@ -164,6 +164,51 @@ public class BaseCommands {
             )
             .executes(this::resetCrateCooldown)
         );
+
+        nodeBuilder.branch(Commands.hub("war")
+            .description(Lang.COMMAND_WAR_DESC)
+            .permission(Perms.COMMAND_WAR)
+            .branch(Commands.literal("challenge")
+                .description(Lang.COMMAND_WAR_CHALLENGE_DESC)
+                .permission(Perms.COMMAND_WAR)
+                .withArguments(
+                    Arguments.player(CommandArguments.PLAYER),
+                    CommandArguments.forCrate(plugin),
+                    Arguments.integer(CommandArguments.AMOUNT, 1).localized(CoreLang.COMMAND_ARGUMENT_NAME_AMOUNT).suggestions((reader, context) -> Lists.newList("1", "5", "10"))
+                )
+                .executes(this::warChallenge)
+            )
+            .branch(Commands.literal("accept")
+                .description(Lang.COMMAND_WAR_ACCEPT_DESC)
+                .permission(Perms.COMMAND_WAR)
+                .executes(this::warAccept)
+            )
+            .branch(Commands.literal("deny")
+                .description(Lang.COMMAND_WAR_DENY_DESC)
+                .permission(Perms.COMMAND_WAR)
+                .executes(this::warDeny)
+            )
+        );
+    }
+
+    private boolean warChallenge(@NotNull CommandContext context, @NotNull ParsedArguments arguments) {
+        Player challenger = context.getPlayerOrThrow();
+        Player target = arguments.getPlayer(CommandArguments.PLAYER);
+        Crate crate = arguments.get(CommandArguments.CRATE, Crate.class);
+        int amount = arguments.getInt(CommandArguments.AMOUNT, 1);
+
+        plugin.getWarManager().challenge(challenger, target, crate, amount);
+        return true;
+    }
+
+    private boolean warAccept(@NotNull CommandContext context, @NotNull ParsedArguments arguments) {
+        plugin.getWarManager().accept(context.getPlayerOrThrow());
+        return true;
+    }
+
+    private boolean warDeny(@NotNull CommandContext context, @NotNull ParsedArguments arguments) {
+        plugin.getWarManager().deny(context.getPlayerOrThrow());
+        return true;
     }
 
     @NotNull
