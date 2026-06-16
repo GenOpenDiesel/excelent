@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.jetbrains.annotations.NotNull;
@@ -41,6 +42,14 @@ public class WarListener extends AbstractListener<CratesPlugin> {
     public void onBattleDrag(@NotNull InventoryDragEvent event) {
         if (event.getInventory().getHolder() instanceof WarBattleMenu) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBattleClose(@NotNull InventoryCloseEvent event) {
+        // Show the result title when the player closes the battle view early.
+        if (event.getInventory().getHolder() instanceof WarBattleMenu battle) {
+            battle.onClosed();
         }
     }
 }

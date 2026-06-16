@@ -24,9 +24,9 @@ import java.util.Locale;
 /**
  * CS:GO-style battle view for a resolved crate war. The top row is the opponent's spinner
  * ("maszyna CS:GO"), the bottom row is the viewer's own spinner. Each staked key is animated
- * as its own spin (1 key = 1 roll): both strips scroll and decelerate, land on that round's
- * reward, the rolled drop chance (%) and running score are shown, and after the last round the
- * winner is revealed.
+ * as its own spin (1 key = 1 roll). Every item on the strip shows its drop chance (%), the
+ * running score ticks up, and when the battle ends (or the player closes it) a result title
+ * is shown for ~3 seconds.
  *
  * <p>This menu is purely visual: the winner is already decided and the actual rewards are
  * distributed by {@link WarManager} after {@link #durationTicks(int)}.</p>
@@ -40,8 +40,8 @@ public class WarBattleMenu implements InventoryHolder {
 
     private static final int[] TOP_SLOTS    = {9, 10, 11, 12, 13, 14, 15, 16, 17};
     private static final int[] BOTTOM_SLOTS = {36, 37, 38, 39, 40, 41, 42, 43, 44};
-    private static final int OPP_INFO  = 26;      // opponent's last-roll % readout
-    private static final int SELF_INFO = 27;      // viewer's last-roll % readout
+    private static final int OPP_INFO  = 26;      // opponent's last-roll readout
+    private static final int SELF_INFO = 27;      // viewer's last-roll readout
 
     private final CratesPlugin plugin;
     private final Player viewer;
@@ -50,11 +50,11 @@ public class WarBattleMenu implements InventoryHolder {
 
     private final List<Reward> selfRolls;
     private final List<Reward> oppRolls;
-    private final List<ItemStack> selfIcons;
-    private final List<ItemStack> oppIcons;
     private final double[] selfPoints;
     private final double[] oppPoints;
     private final String winnerName; // null => draw
+    private final double selfTotal;
+    private final double oppTotal;
 
     private final Inventory inventory;
     private final int rounds;
@@ -71,6 +71,7 @@ public class WarBattleMenu implements InventoryHolder {
     private double selfRunning;
     private double oppRunning;
     private boolean finished;
+    private boolean titleSent;
     private long endCounter;
 
     public WarBattleMenu(@NotNull CratesPlugin plugin,
@@ -91,14 +92,20 @@ public class WarBattleMenu implements InventoryHolder {
         this.selfPoints = selfPoints;
         this.oppPoints = oppPoints;
         this.winnerName = winnerName;
+        this.selfTotal = sum(selfPoints);
+        this.oppTotal = sum(oppPoints);
 
-        this.selfIcons = toIcons(selfRolls);
-        this.oppIcons = toIcons(oppRolls);
-        this.rounds = Math.max(1, Math.min(this.selfIcons.size(), this.oppIcons.size()));
+        this.rounds = Math.max(1, Math.min(selfRolls.size(), oppRolls.size()));
         this.roundTicks = roundTicks(this.rounds);
 
         String title = "§0§lCRATE WAR §8» §c" + viewer.getName() + " §7vs §c" + opponent.getName();
         this.inventory = Bukkit.createInventory(this, SIZE, title.length() > 32 ? "§0§lCRATE WAR" : title);
+    }
+
+    private static double sum(@NotNull double[] values) {
+        double total = 0;
+        for (double v : values) total += v;
+        return total;
     }
 
     /** Per-round spin length, in ticks; shrinks as the stake grows so big wars stay watchable. */
@@ -127,26 +134,17 @@ public class WarBattleMenu implements InventoryHolder {
         this.task = Bukkit.getScheduler().runTaskTimer(this.plugin, this::tick, 1L, 1L);
     }
 
-    @NotNull
-    private static List<ItemStack> toIcons(@NotNull List<Reward> rolls) {
-        List<ItemStack> icons = new ArrayList<>();
-        for (Reward reward : rolls) {
-            ItemStack item = reward.getPreviewItem();
-            icons.add(item != null && item.getType() != Material.AIR ? item : new ItemStack(Material.PAPER));
-        }
-        return icons;
-    }
-
+    /** Pool of filler icons, each already annotated with its drop chance. */
     @NotNull
     private List<ItemStack> buildPool() {
         List<ItemStack> pool = new ArrayList<>();
         for (Reward reward : this.crate.getRewards(this.viewer)) {
             ItemStack item = reward.getPreviewItem();
-            if (item != null && item.getType() != Material.AIR) pool.add(item);
+            if (item != null && item.getType() != Material.AIR) {
+                pool.add(this.withChance(reward, this.viewer));
+            }
         }
-        pool.addAll(this.selfIcons);
-        pool.addAll(this.oppIcons);
-        if (pool.isEmpty()) pool.add(new ItemStack(Material.PAPER));
+        if (pool.isEmpty()) pool.add(named(Material.PAPER, "§7?"));
         return pool;
     }
 
@@ -154,8 +152,8 @@ public class WarBattleMenu implements InventoryHolder {
         this.round = round;
         this.roundElapsed = 0;
         this.lastIndex = -1;
-        this.topStrip = this.buildStrip(this.oppIcons.get(round));
-        this.bottomStrip = this.buildStrip(this.selfIcons.get(round));
+        this.topStrip = this.buildStrip(this.withChance(this.oppRolls.get(round), this.opponent));
+        this.bottomStrip = this.buildStrip(this.withChance(this.selfRolls.get(round), this.viewer));
         this.updateHeads();
     }
 
@@ -172,7 +170,7 @@ public class WarBattleMenu implements InventoryHolder {
     }
 
     private void tick() {
-        // Stop if the viewer closed the battle view.
+        // Stop if the viewer closed the battle view (close handler shows the title).
         if (!this.viewer.isOnline() || this.viewer.getOpenInventory().getTopInventory() != this.inventory) {
             this.cancel();
             return;
@@ -203,7 +201,6 @@ public class WarBattleMenu implements InventoryHolder {
     }
 
     private void endRound() {
-        // Bank this round's points, reveal the rolled chance, and ding.
         this.selfRunning += this.selfPoints[this.round];
         this.oppRunning += this.oppPoints[this.round];
 
@@ -230,23 +227,52 @@ public class WarBattleMenu implements InventoryHolder {
     private void finish() {
         this.finished = true;
 
-        boolean draw = this.winnerName == null;
-        boolean won = !draw && this.winnerName.equals(this.viewer.getName());
-
         ItemStack status;
-        if (draw) {
+        if (this.winnerName == null) {
             status = named(Material.PAPER, "§e§lREMIS");
         }
-        else if (won) {
+        else if (this.winnerName.equals(this.viewer.getName())) {
             status = named(Material.NETHER_STAR, "§a§lWYGRANA!");
-            this.viewer.playSound(this.viewer.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
         }
         else {
             status = named(Material.BARRIER, "§c§lPRZEGRANA");
-            this.viewer.playSound(this.viewer.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
         }
         this.inventory.setItem(8, status);
         this.inventory.setItem(53, status.clone());
+
+        this.showResultTitle();
+    }
+
+    /** Sends the win/loss/draw title (~3s). Called on finish and when the player closes early. */
+    public void showResultTitle() {
+        if (this.titleSent || !this.viewer.isOnline()) return;
+        this.titleSent = true;
+
+        String title;
+        Sound sound;
+        if (this.winnerName == null) {
+            title = "§e§lREMIS";
+            sound = Sound.BLOCK_NOTE_BLOCK_BELL;
+        }
+        else if (this.winnerName.equals(this.viewer.getName())) {
+            title = "§a§lWYGRAŁEŚ!";
+            sound = Sound.UI_TOAST_CHALLENGE_COMPLETE;
+        }
+        else {
+            title = "§c§lPRZEGRAŁEŚ";
+            sound = Sound.ENTITY_VILLAGER_NO;
+        }
+
+        String subtitle = "§7Twój wynik: §e" + (long) this.selfTotal + " §7vs §c" + (long) this.oppTotal;
+        // fadeIn 10, stay 60 (3s), fadeOut 10
+        this.viewer.sendTitle(title, subtitle, 10, 60, 10);
+        this.viewer.playSound(this.viewer.getLocation(), sound, 1f, 1f);
+    }
+
+    /** Invoked by {@link WarListener} when the player closes the battle inventory. */
+    public void onClosed() {
+        this.showResultTitle();
+        this.cancel();
     }
 
     private void buildFrame() {
@@ -289,23 +315,39 @@ public class WarBattleMenu implements InventoryHolder {
         return item;
     }
 
-    /** Builds the "last roll" readout: reward name + its drop chance (%) + points earned. */
+    /** The "last roll" readout: reward name + its drop chance (%) + points earned. */
     @NotNull
     private ItemStack rollInfo(@NotNull Reward reward, @NotNull Player owner, double points, @NotNull String accent) {
-        ItemStack item = reward.getPreviewItem();
-        if (item == null || item.getType() == Material.AIR) item = new ItemStack(Material.NAME_TAG);
-        else item = item.clone();
-
+        ItemStack item = baseIcon(reward);
         double percent = reward.getRollChance(owner);
-        ItemStack finalItem = item;
-        ItemUtil.editMeta(finalItem, meta -> {
+        ItemUtil.editMeta(item, meta -> {
             ItemUtil.setCustomName(meta, accent + reward.getName());
             ItemUtil.setLore(meta, List.of(
                 "§7Szansa dropu: §e" + formatPercent(percent) + "%",
                 "§7Punkty: §e+" + (long) points
             ));
         });
-        return finalItem;
+        return item;
+    }
+
+    /** Clones a reward's preview icon and appends its drop chance to the existing lore. */
+    @NotNull
+    private ItemStack withChance(@NotNull Reward reward, @NotNull Player owner) {
+        ItemStack item = baseIcon(reward);
+        double percent = reward.getRollChance(owner);
+
+        List<String> existing = ItemUtil.getLore(item);
+        List<String> lore = existing == null ? new ArrayList<>() : new ArrayList<>(existing);
+        lore.add("§7Szansa: §e" + formatPercent(percent) + "%");
+
+        ItemUtil.editMeta(item, meta -> ItemUtil.setLore(meta, lore));
+        return item;
+    }
+
+    @NotNull
+    private static ItemStack baseIcon(@NotNull Reward reward) {
+        ItemStack item = reward.getPreviewItem();
+        return item == null || item.getType() == Material.AIR ? new ItemStack(Material.NAME_TAG) : item.clone();
     }
 
     @NotNull
