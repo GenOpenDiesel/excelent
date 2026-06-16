@@ -19,12 +19,14 @@ import su.nightexpress.nightcore.util.random.Rnd;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * CS:GO-style battle view for a resolved crate war. The top row is the opponent's spinner
  * ("maszyna CS:GO"), the bottom row is the viewer's own spinner. Each staked key is animated
- * as its own spin: both strips scroll and decelerate, land on that round's reward, the running
- * score ticks up, and after the last round the winner is revealed.
+ * as its own spin (1 key = 1 roll): both strips scroll and decelerate, land on that round's
+ * reward, the rolled drop chance (%) and running score are shown, and after the last round the
+ * winner is revealed.
  *
  * <p>This menu is purely visual: the winner is already decided and the actual rewards are
  * distributed by {@link WarManager} after {@link #durationTicks(int)}.</p>
@@ -38,12 +40,16 @@ public class WarBattleMenu implements InventoryHolder {
 
     private static final int[] TOP_SLOTS    = {9, 10, 11, 12, 13, 14, 15, 16, 17};
     private static final int[] BOTTOM_SLOTS = {36, 37, 38, 39, 40, 41, 42, 43, 44};
+    private static final int OPP_INFO  = 26;      // opponent's last-roll % readout
+    private static final int SELF_INFO = 27;      // viewer's last-roll % readout
 
     private final CratesPlugin plugin;
     private final Player viewer;
     private final Player opponent;
     private final Crate  crate;
 
+    private final List<Reward> selfRolls;
+    private final List<Reward> oppRolls;
     private final List<ItemStack> selfIcons;
     private final List<ItemStack> oppIcons;
     private final double[] selfPoints;
@@ -80,6 +86,8 @@ public class WarBattleMenu implements InventoryHolder {
         this.viewer = viewer;
         this.opponent = opponent;
         this.crate = crate;
+        this.selfRolls = selfRolls;
+        this.oppRolls = oppRolls;
         this.selfPoints = selfPoints;
         this.oppPoints = oppPoints;
         this.winnerName = winnerName;
@@ -195,9 +203,12 @@ public class WarBattleMenu implements InventoryHolder {
     }
 
     private void endRound() {
-        // Bank this round's points and ding.
+        // Bank this round's points, reveal the rolled chance, and ding.
         this.selfRunning += this.selfPoints[this.round];
         this.oppRunning += this.oppPoints[this.round];
+
+        this.inventory.setItem(OPP_INFO, this.rollInfo(this.oppRolls.get(this.round), this.opponent, this.oppPoints[this.round], "§c"));
+        this.inventory.setItem(SELF_INFO, this.rollInfo(this.selfRolls.get(this.round), this.viewer, this.selfPoints[this.round], "§a"));
         this.updateHeads();
         this.viewer.playSound(this.viewer.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.7f, 1.4f);
 
@@ -250,6 +261,9 @@ public class WarBattleMenu implements InventoryHolder {
         this.inventory.setItem(31, pointer.clone());  // above bottom strip
         this.inventory.setItem(49, pointer.clone());  // below bottom strip
 
+        this.inventory.setItem(OPP_INFO, named(Material.NAME_TAG, "§7Przeciwnik: §f—"));
+        this.inventory.setItem(SELF_INFO, named(Material.NAME_TAG, "§7Twój los: §f—"));
+
         // Clear strip rows so the border doesn't flash before the first frame.
         for (int slot : TOP_SLOTS) this.inventory.setItem(slot, null);
         for (int slot : BOTTOM_SLOTS) this.inventory.setItem(slot, null);
@@ -273,6 +287,32 @@ public class WarBattleMenu implements InventoryHolder {
             ));
         });
         return item;
+    }
+
+    /** Builds the "last roll" readout: reward name + its drop chance (%) + points earned. */
+    @NotNull
+    private ItemStack rollInfo(@NotNull Reward reward, @NotNull Player owner, double points, @NotNull String accent) {
+        ItemStack item = reward.getPreviewItem();
+        if (item == null || item.getType() == Material.AIR) item = new ItemStack(Material.NAME_TAG);
+        else item = item.clone();
+
+        double percent = reward.getRollChance(owner);
+        ItemStack finalItem = item;
+        ItemUtil.editMeta(finalItem, meta -> {
+            ItemUtil.setCustomName(meta, accent + reward.getName());
+            ItemUtil.setLore(meta, List.of(
+                "§7Szansa dropu: §e" + formatPercent(percent) + "%",
+                "§7Punkty: §e+" + (long) points
+            ));
+        });
+        return finalItem;
+    }
+
+    @NotNull
+    private static String formatPercent(double percent) {
+        if (percent >= 1D) return String.format(Locale.US, "%.2f", percent);
+        if (percent >= 0.01D) return String.format(Locale.US, "%.3f", percent);
+        return String.format(Locale.US, "%.5f", percent);
     }
 
     @NotNull
