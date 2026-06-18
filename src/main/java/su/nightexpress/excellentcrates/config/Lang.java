@@ -117,6 +117,82 @@ public class Lang implements LangContainer {
 
 
 
+    public static final TextLocale COMMAND_WAR_DESC          = LangEntry.builder("Command.War.Desc").text("Crate war (PvP crate battle).");
+    public static final TextLocale COMMAND_WAR_CHALLENGE_DESC = LangEntry.builder("Command.War.Challenge.Desc").text("Challenge a player to a crate war.");
+    public static final TextLocale COMMAND_WAR_ACCEPT_DESC    = LangEntry.builder("Command.War.Accept.Desc").text("Accept a pending crate war invite.");
+    public static final TextLocale COMMAND_WAR_DENY_DESC      = LangEntry.builder("Command.War.Deny.Desc").text("Deny a pending crate war invite.");
+
+    public static final TextLocale WAR_DRAW_NAME = LangEntry.builder("CrateWar.DrawName").text("Draw");
+
+    public static final MessageLocale WAR_DISABLED = LangEntry.builder("CrateWar.Disabled").chatMessage(
+        SOFT_RED.wrap("Crate War feature is disabled."));
+
+    public static final MessageLocale WAR_ERROR_SELF = LangEntry.builder("CrateWar.Error.Self").chatMessage(
+        SOFT_RED.wrap("You can not start a war with yourself."));
+
+    public static final MessageLocale WAR_ERROR_AMOUNT = LangEntry.builder("CrateWar.Error.Amount").chatMessage(
+        GRAY.wrap("Key amount must be between " + SOFT_YELLOW.wrap(GENERIC_MIN) + " and " + SOFT_YELLOW.wrap(GENERIC_MAX) + "."));
+
+    public static final MessageLocale WAR_ERROR_NO_COST = LangEntry.builder("CrateWar.Error.NoCost").chatMessage(
+        GRAY.wrap(SOFT_YELLOW.wrap(CRATE_NAME) + " can not be used in a war (it has no key cost)."));
+
+    public static final MessageLocale WAR_ERROR_NO_REWARDS = LangEntry.builder("CrateWar.Error.NoRewards").chatMessage(
+        GRAY.wrap(SOFT_YELLOW.wrap(CRATE_NAME) + " has no rewards to fight for."));
+
+    public static final MessageLocale WAR_ERROR_NOT_ENOUGH_KEYS = LangEntry.builder("CrateWar.Error.NotEnoughKeys").chatMessage(
+        GRAY.wrap("You don't have enough keys to stake " + SOFT_YELLOW.wrap("x" + GENERIC_AMOUNT) + " openings of " + SOFT_YELLOW.wrap(CRATE_NAME) + "."));
+
+    public static final MessageLocale WAR_ERROR_OPPONENT_BROKE = LangEntry.builder("CrateWar.Error.OpponentBroke").chatMessage(
+        GRAY.wrap(SOFT_YELLOW.wrap(WAR_TARGET) + " does not have enough keys for the war."));
+
+    public static final MessageLocale WAR_ERROR_ALREADY_INVITED = LangEntry.builder("CrateWar.Error.AlreadyInvited").chatMessage(
+        GRAY.wrap(SOFT_YELLOW.wrap(WAR_TARGET) + " already has a pending war invite."));
+
+    public static final MessageLocale WAR_ERROR_NO_INVITE = LangEntry.builder("CrateWar.Error.NoInvite").chatMessage(
+        SOFT_RED.wrap("You don't have any pending war invites."));
+
+    public static final MessageLocale WAR_ERROR_CHALLENGER_OFFLINE = LangEntry.builder("CrateWar.Error.ChallengerOffline").chatMessage(
+        SOFT_RED.wrap("The player who challenged you is no longer online."));
+
+    public static final MessageLocale WAR_INVITE_SENT = LangEntry.builder("CrateWar.Invite.Sent").chatMessage(
+        GRAY.wrap("You challenged " + SOFT_YELLOW.wrap(WAR_TARGET) + " to a war on " + SOFT_YELLOW.wrap(CRATE_NAME) + " for " + SOFT_YELLOW.wrap("x" + GENERIC_AMOUNT) + " keys. Expires in " + SOFT_YELLOW.wrap(GENERIC_TIME) + "."));
+
+    public static final MessageLocale WAR_INVITE_RECEIVED = LangEntry.builder("CrateWar.Invite.Received").chatMessage(
+        GRAY.wrap(SOFT_YELLOW.wrap(WAR_CHALLENGER) + " challenged you to a war on " + SOFT_YELLOW.wrap(CRATE_NAME) + " for " + SOFT_YELLOW.wrap("x" + GENERIC_AMOUNT) + " keys!\n")
+            + "<click:run_command:'/crates war accept'>" + GREEN.wrap(BOLD.wrap("[ACCEPT]")) + "</click>"
+            + GRAY.wrap("   ")
+            + "<click:run_command:'/crates war deny'>" + SOFT_RED.wrap(BOLD.wrap("[DENY]")) + "</click>"
+            + GRAY.wrap("   (" + SOFT_YELLOW.wrap(GENERIC_TIME) + ")"));
+
+    public static final MessageLocale WAR_PROMPT_TARGET = LangEntry.builder("CrateWar.Prompt.Target").chatMessage(
+        GRAY.wrap("Type the " + SOFT_YELLOW.wrap("name") + " of the player you want to challenge on " + SOFT_YELLOW.wrap(CRATE_NAME) + " (" + SOFT_YELLOW.wrap("x" + GENERIC_AMOUNT) + " keys) in chat.\n")
+            + GRAY.wrap("Type " + SOFT_RED.wrap("cancel") + " to cancel."));
+
+    public static final MessageLocale WAR_PROMPT_CANCELLED = LangEntry.builder("CrateWar.Prompt.Cancelled").chatMessage(
+        GRAY.wrap("War challenge cancelled."));
+
+    public static final MessageLocale WAR_ERROR_TARGET_NOT_FOUND = LangEntry.builder("CrateWar.Error.TargetNotFound").chatMessage(
+        GRAY.wrap("Player " + SOFT_RED.wrap(WAR_TARGET) + " was not found or is offline."));
+
+    public static final MessageLocale WAR_DENIED_TARGET = LangEntry.builder("CrateWar.Denied.Target").chatMessage(
+        GRAY.wrap("You denied the war invite from " + SOFT_YELLOW.wrap(WAR_CHALLENGER) + "."));
+
+    public static final MessageLocale WAR_DENIED_CHALLENGER = LangEntry.builder("CrateWar.Denied.Challenger").chatMessage(
+        GRAY.wrap(SOFT_YELLOW.wrap(WAR_TARGET) + " denied your war invite."));
+
+    public static final MessageLocale WAR_EXPIRED = LangEntry.builder("CrateWar.Expired").chatMessage(
+        GRAY.wrap("The war invite between " + SOFT_YELLOW.wrap(WAR_CHALLENGER) + " and " + SOFT_YELLOW.wrap(WAR_TARGET) + " has expired."));
+
+    public static final MessageLocale WAR_RESULT = LangEntry.builder("CrateWar.Result").chatMessage(
+        GRAY.wrap("Crate War on " + SOFT_YELLOW.wrap(CRATE_NAME) + ": ")
+            + GRAY.wrap(SOFT_YELLOW.wrap(WAR_CHALLENGER) + " (" + WAR_CHALLENGER_SCORE + " pts) vs " + SOFT_YELLOW.wrap(WAR_TARGET) + " (" + WAR_TARGET_SCORE + " pts) ")
+            + GRAY.wrap("→ Winner: " + GREEN.wrap(WAR_WINNER) + "!"));
+
+    public static final MessageLocale WAR_RESULT_BROADCAST = LangEntry.builder("CrateWar.ResultBroadcast").chatMessage(
+        GRAY.wrap(GREEN.wrap(WAR_WINNER) + " won a Crate War against " + SOFT_RED.wrap(WAR_LOSER) + " on " + SOFT_YELLOW.wrap(CRATE_NAME) + " and took all the rewards!"));
+
+
+
 
 
     public static final MessageLocale CRATE_OPEN_ERROR_INVENTORY_SPACE = LangEntry.builder("Crate.Open.Error.InventorySpace").titleMessage(

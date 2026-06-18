@@ -90,6 +90,39 @@ public class Config {
         true,
         "Controls whether Milestones feature is enabled.");
 
+    public static final ConfigValue<Boolean> WAR_ENABLED = ConfigValue.create("CrateWar.Enabled",
+        true,
+        "Controls whether the Crate War feature is enabled.",
+        "Players challenge each other to open the same crate a set amount of times;",
+        "the one who rolls the rarer rewards (lower drop chance) wins and takes all rewards from both sides."
+    );
+
+    public static final ConfigValue<Integer> WAR_INVITE_EXPIRE_SECONDS = ConfigValue.create("CrateWar.Invite_Expire_Seconds",
+        60,
+        "How long (in seconds) a war invitation stays valid before it expires."
+    );
+
+    public static final ConfigValue<Integer> WAR_MIN_KEYS = ConfigValue.create("CrateWar.Min_Keys",
+        1,
+        "Minimum number of crate openings (keys) that can be staked in a single war."
+    );
+
+    public static final ConfigValue<Integer> WAR_MAX_KEYS = ConfigValue.create("CrateWar.Max_Keys",
+        64,
+        "Maximum number of crate openings (keys) that can be staked in a single war."
+    );
+
+    public static final ConfigValue<Boolean> WAR_BROADCAST_RESULT = ConfigValue.create("CrateWar.Broadcast_Result",
+        true,
+        "Whether the outcome of a finished war is broadcast to the whole server."
+    );
+
+    public static final ConfigValue<Boolean> WAR_ANIMATION_ENABLED = ConfigValue.create("CrateWar.Animation.Enabled",
+        true,
+        "Whether to show the CS:GO-style battle animation when a war is resolved.",
+        "Top row = opponent's roll, bottom row = your roll. When disabled, rewards are given instantly."
+    );
+
     public static final ConfigValue<Integer> CRATE_SAVE_INTERVAL = ConfigValue.create("Crate.SaveInterval",
         300,
         "Sets save interval (in seconds) for crates that were changed using the in-game editor.",

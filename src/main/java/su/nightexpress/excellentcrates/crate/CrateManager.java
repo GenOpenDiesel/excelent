@@ -43,6 +43,7 @@ import su.nightexpress.excellentcrates.dialog.reward.*;
 import su.nightexpress.excellentcrates.hologram.HologramTemplate;
 import su.nightexpress.excellentcrates.registry.CratesRegistries;
 import su.nightexpress.excellentcrates.user.CrateUser;
+import su.nightexpress.excellentcrates.war.WarSetupMenu;
 import su.nightexpress.excellentcrates.util.CrateUtils;
 import su.nightexpress.excellentcrates.util.InteractType;
 import su.nightexpress.excellentcrates.util.ItemHelper;
@@ -75,6 +76,7 @@ public class CrateManager extends AbstractManager<CratesPlugin> {
     private OpeningCostMenu   costMenu;
     private OpeningAmountMenu amountMenu;
     private MilestonesMenu    milestonesMenu;
+    private WarSetupMenu      warSetupMenu;
 
     public CrateManager(@NotNull CratesPlugin plugin, @NotNull DialogRegistry dialogs) {
         super(plugin);
@@ -179,6 +181,7 @@ public class CrateManager extends AbstractManager<CratesPlugin> {
     private void loadUI() {
         this.costMenu = this.addMenu(new OpeningCostMenu(this.plugin, this), Config.DIR_UI, "crate_open_costs.yml");
         this.amountMenu = this.addMenu(new OpeningAmountMenu(this.plugin, this), Config.DIR_UI, "crate_open_amount.yml");
+        this.warSetupMenu = this.addMenu(new WarSetupMenu(this.plugin), Config.DIR_UI, "crate_war.yml");
 
         if (Config.isMilestonesEnabled()) {
             this.milestonesMenu = new MilestonesMenu(this.plugin);
@@ -300,6 +303,12 @@ public class CrateManager extends AbstractManager<CratesPlugin> {
     public void openMilestones(@NotNull Player player, @NotNull CrateSource source) {
         if (this.milestonesMenu != null) {
             this.milestonesMenu.open(player, source);
+        }
+    }
+
+    public void openWarSetup(@NotNull Player player, @NotNull Crate crate) {
+        if (this.warSetupMenu != null) {
+            this.warSetupMenu.open(player, crate);
         }
     }
 

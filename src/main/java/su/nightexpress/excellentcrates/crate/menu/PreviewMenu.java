@@ -246,7 +246,6 @@ public class PreviewMenu extends LinkedMenu<CratesPlugin, CrateSource> implement
         }).build()));
         // *** End of mass_open handler addition ***
 
-
         // --- Default Items --- (Load these after handlers)
 
         loader.addDefaultItem(new NightItem(Material.BLACK_STAINED_GLASS_PANE).setHideTooltip(true).toMenuItem()
@@ -263,6 +262,47 @@ public class PreviewMenu extends LinkedMenu<CratesPlugin, CrateSource> implement
                 .setHandler(new ItemHandler("milestones", (viewer, event) -> {
                     this.runNextTick(() -> plugin.getCrateManager().openMilestones(viewer.getPlayer(), this.getLink(viewer)));
                 }, ItemOptions.builder().setVisibilityPolicy(viewer -> this.getLink(viewer).getCrate().hasMilestones()).build()))
+        );
+
+        // *** Crate War button: opens the "graj o wojnę" setup (pick opponent + key amount) ***
+        loader.addDefaultItem(new NightItem(Material.NETHERITE_SWORD)
+                .setDisplayName(RED.wrap(BOLD.wrap("Graj o Wojnę")))
+                .setLore(Lists.newList(
+                    GRAY.wrap("Wyzwij gracza na pojedynek o tę skrzynię!"),
+                    GRAY.wrap("Obaj otwieracie skrzynię tyle samo razy."),
+                    GRAY.wrap("Kto wylosuje rzadsze nagrody " + RED.wrap("(mniejszy %)")),
+                    GRAY.wrap("ten zgarnia " + YELLOW.wrap("wszystkie nagrody") + "!"),
+                    "",
+                    GREEN.wrap("» Kliknij, aby wybrać przeciwnika.")
+                ))
+                .toMenuItem()
+                .setPriority(10)
+                .setSlots(36)
+                .setHandler(new ItemHandler("war", (viewer, event) -> {
+                    CrateSource source = this.getLink(viewer);
+                    Player player = viewer.getPlayer();
+                    Crate crate = source.getCrate();
+
+                    if (!Config.WAR_ENABLED.get()) {
+                        Lang.WAR_DISABLED.message().send(player);
+                        return;
+                    }
+                    if (!crate.hasRewards(player)) {
+                        Lang.WAR_ERROR_NO_REWARDS.message().send(player, replacer -> replacer.replace(crate.replacePlaceholders()));
+                        return;
+                    }
+                    if (crate.getFirstCost().isEmpty()) {
+                        Lang.WAR_ERROR_NO_COST.message().send(player, replacer -> replacer.replace(crate.replacePlaceholders()));
+                        return;
+                    }
+
+                    this.runNextTick(() -> {
+                        player.closeInventory();
+                        plugin.getCrateManager().openWarSetup(player, crate);
+                    });
+                }, ItemOptions.builder().setVisibilityPolicy(viewer ->
+                    Config.WAR_ENABLED.get() && viewer.getPlayer().hasPermission(Perms.COMMAND_WAR)
+                ).build()))
         );
 
         loader.addDefaultItem(MenuItem.buildExit(this, 40).setPriority(10));

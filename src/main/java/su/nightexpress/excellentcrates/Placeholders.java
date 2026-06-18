@@ -24,6 +24,7 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String GENERIC_AMOUNT     = "%amount%";
     public static final String GENERIC_ID         = "%id%";
     public static final String GENERIC_CURRENT    = "%current%";
+    public static final String GENERIC_MIN        = "%min%";
     public static final String GENERIC_MAX        = "%max%";
     public static final String GENERIC_TIME       = "%time%";
     public static final String GENERIC_KEYS       = "%keys%";
@@ -67,6 +68,13 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
 
     public static final String COST_ID   = "%cost_id%";
     public static final String COST_NAME = "%cost_name%";
+
+    public static final String WAR_CHALLENGER       = "%war_challenger%";
+    public static final String WAR_TARGET           = "%war_target%";
+    public static final String WAR_WINNER           = "%war_winner%";
+    public static final String WAR_LOSER            = "%war_loser%";
+    public static final String WAR_CHALLENGER_SCORE = "%war_challenger_score%";
+    public static final String WAR_TARGET_SCORE     = "%war_target_score%";
 
     public static final PlaceholderList<Crate> CRATE = PlaceholderList.create(list -> list
         .add(CRATE_ID, Crate::getId)
