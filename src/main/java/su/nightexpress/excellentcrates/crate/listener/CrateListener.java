@@ -88,9 +88,14 @@ public class CrateListener extends AbstractListener<CratesPlugin> {
         boolean isLeftClick = action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK;
         boolean isRightClick = action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK;
 
-        InteractType clickAction = isLeftClick ? InteractType.CRATE_PREVIEW : (isRightClick ? InteractType.CRATE_OPEN : null);
+        boolean isCrateBlock = block != null && this.manager.getCrateByBlock(block) != null;
+        boolean forcePreview = player.isSneaking() && isCrateBlock;
+
+        InteractType clickAction = forcePreview
+            ? InteractType.CRATE_PREVIEW
+            : (isLeftClick ? InteractType.CRATE_PREVIEW : (isRightClick ? InteractType.CRATE_OPEN : null));
         if (clickAction == null) return;
-        if (Config.CRATE_REVERSE_CLICK_ACTIONS.get()) clickAction = clickAction.reversed();
+        if (!forcePreview && Config.CRATE_REVERSE_CLICK_ACTIONS.get()) clickAction = clickAction.reversed();
 
         // Uh, adventure gamemode triggers LEFT_CLICK interaction on interactable blocks together with RIGHT_CLICK interaction.
         if (player.getGameMode() == GameMode.ADVENTURE && block != null && block.getType().isInteractable()) {

@@ -220,12 +220,12 @@ public class PreviewMenu extends LinkedMenu<CratesPlugin, CrateSource> implement
             }
             // *** End affordability check ***
 
-            // Determine max openings based on the affordable cost or default limit
+            int massOpeningLimit = Config.MASS_OPENING_LIMIT.get();
             int maxOpenings = (costToUse != null)
                     ? costToUse.countMaxOpenings(player)
-                    : Config.MASS_OPENING_LIMIT.get(); // If free, use config limit
+                    : massOpeningLimit;
 
-            int amountToOpen = Math.min(maxOpenings, Config.MASS_OPENING_LIMIT.get()); // Ensure it doesn't exceed global limit
+            int amountToOpen = Math.min(maxOpenings, massOpeningLimit);
 
             if (amountToOpen <= 0) {
                  // Send a message if they can afford but the calculated amount is somehow zero
@@ -237,7 +237,7 @@ public class PreviewMenu extends LinkedMenu<CratesPlugin, CrateSource> implement
 
             this.runNextTick(() -> {
                 player.closeInventory();
-                plugin.getCrateManager().multiOpenCrate(player, source, OpenOptions.empty(), costToUse, amountToOpen); // Use the determined cost
+                plugin.getCrateManager().multiOpenCrate(player, source, OpenOptions.empty(), costToUse, amountToOpen);
             });
         }, ItemOptions.builder().setVisibilityPolicy(viewer -> {
              // Show mass open button only if the feature is enabled and the player has permission
