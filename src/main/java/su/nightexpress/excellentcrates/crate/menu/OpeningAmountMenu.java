@@ -4,6 +4,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MenuType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -66,19 +67,23 @@ public class OpeningAmountMenu extends LinkedMenu<CratesPlugin, OpeningAmountMen
 
         for (int index = 0; index < amounts.length; index++) {
             int amount = amounts[index];
+            boolean available = amount > 0;
+            ItemStack icon = available ? crate.getItemStack() : new ItemStack(Material.RED_STAINED_GLASS_PANE);
 
-            viewer.addItem(NightItem.fromItemStack(crate.getItemStack())
+            viewer.addItem(NightItem.fromItemStack(icon)
                 .localized(index == 0 ? Lang.UI_OPEN_AMOUNT_SINGLE : Lang.UI_OPEN_AMOUNT_ALL)
                 .replacement(replacer -> replacer
                     .replace(crate.replacePlaceholders())
                     .replace(GENERIC_MAX, () -> String.valueOf(amount))
                 )
-                .setAmount(amount)
+                .setAmount(Math.max(1, amount))
                 .hideAllComponents()
                 .toMenuItem()
                 .setSlots(slots[index])
                 .setPriority(Integer.MAX_VALUE)
                 .setHandler((viewer1, event) -> {
+                    if (!available) return;
+
                     this.runNextTick(() -> {
                         player.closeInventory();
                         this.manager.multiOpenCrate(player, source, OpenOptions.empty(), cost, amount);
