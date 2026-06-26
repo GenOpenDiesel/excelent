@@ -8,6 +8,7 @@ import su.nightexpress.excellentcrates.Placeholders;
 import su.nightexpress.excellentcrates.config.Keys;
 import su.nightexpress.excellentcrates.config.Lang;
 import su.nightexpress.excellentcrates.util.ItemHelper;
+import su.nightexpress.excellentcrates.util.MiniMessageSanitizer;
 import su.nightexpress.nightcore.bridge.item.AdaptedItem;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.manager.ConfigBacked;
@@ -124,7 +125,7 @@ public class CrateKey implements ConfigBacked {
     }
 
     public void setName(@NotNull String name) {
-        this.name = name;
+        this.name = MiniMessageSanitizer.sanitize(name);
     }
 
     public boolean isVirtual() {

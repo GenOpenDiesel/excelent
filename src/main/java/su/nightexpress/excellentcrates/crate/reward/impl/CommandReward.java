@@ -12,6 +12,7 @@ import su.nightexpress.excellentcrates.crate.impl.Rarity;
 import su.nightexpress.excellentcrates.crate.reward.AbstractReward;
 import su.nightexpress.excellentcrates.util.CrateUtils;
 import su.nightexpress.excellentcrates.util.ItemHelper;
+import su.nightexpress.excellentcrates.util.MiniMessageSanitizer;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.*;
 import su.nightexpress.nightcore.util.placeholder.Replacer;
@@ -108,7 +109,7 @@ public class CommandReward extends AbstractReward {
     }
 
     public void setName(@NotNull String name) {
-        this.name = name;
+        this.name = MiniMessageSanitizer.sanitize(name);
     }
 
     @NotNull
@@ -118,7 +119,7 @@ public class CommandReward extends AbstractReward {
     }
 
     public void setDescription(@NotNull List<String> description) {
-        this.description = description;
+        this.description = MiniMessageSanitizer.sanitize(description);
     }
 
     @NotNull

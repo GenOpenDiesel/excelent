@@ -212,11 +212,6 @@ public class Config {
         "Controls whether players can do Mass Opening for crates with no cost options defined."
     );
 
-    public static final ConfigValue<Boolean> MASS_OPENING_SNEAK_TO_USE = ConfigValue.create("Crate.MassOpening.SneakToUse",
-        true,
-        "Controls whether players can do Mass Opening by opening crates while sneaking."
-    );
-
     public static final ConfigValue<Integer> MASS_OPENING_LIMIT = ConfigValue.create("Crate.Mass_Opening_Limit",
         30,
         "Limits amount of crate openings for the Mass Opening feature to this value.",

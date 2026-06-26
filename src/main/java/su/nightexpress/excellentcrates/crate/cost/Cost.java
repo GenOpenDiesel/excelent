@@ -7,6 +7,7 @@ import su.nightexpress.excellentcrates.Placeholders;
 import su.nightexpress.excellentcrates.api.cost.CostEntry;
 import su.nightexpress.excellentcrates.crate.cost.entry.AbstractCostEntry;
 import su.nightexpress.excellentcrates.util.ItemHelper;
+import su.nightexpress.excellentcrates.util.MiniMessageSanitizer;
 import su.nightexpress.nightcore.bridge.item.AdaptedItem;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
@@ -162,7 +163,7 @@ public class Cost implements Writeable {
     }
 
     public void setName(@NotNull String name) {
-        this.name = name;
+        this.name = MiniMessageSanitizer.sanitize(name);
     }
 
     @NotNull

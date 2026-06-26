@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentcrates.CratesPlugin;
 import su.nightexpress.excellentcrates.Placeholders;
+import su.nightexpress.excellentcrates.util.MiniMessageSanitizer;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.StringUtil;
 
@@ -72,7 +73,7 @@ public class Rarity {
     }
 
     public void setName(@NotNull String name) {
-        this.name = name;
+        this.name = MiniMessageSanitizer.sanitize(name);
     }
 
     public double getWeight() {

@@ -481,12 +481,7 @@ public class CrateManager extends AbstractManager<CratesPlugin> {
 
         if (!crate.hasCost()) {
             if (Config.MASS_OPENING_ALLOW_FOR_NO_COST.get()) {
-                if (Config.MASS_OPENING_SNEAK_TO_USE.get() && player.isSneaking()) {
-                    this.multiOpenCrate(player, source, OpenOptions.empty(), null, Config.MASS_OPENING_LIMIT.get());
-                }
-                else {
-                    this.openAmountMenu(player, source, null);
-                }
+                this.openAmountMenu(player, source, null);
             }
             else {
                 this.openCrate(player, source, OpenOptions.empty(), null);
@@ -501,12 +496,7 @@ public class CrateManager extends AbstractManager<CratesPlugin> {
 
         Cost cost = crate.getFirstCost().orElse(null);
 
-        if (Config.MASS_OPENING_SNEAK_TO_USE.get() && player.isSneaking()) {
-            this.multiOpenCrate(player, source, OpenOptions.empty(), cost, crate.countMaxOpenings(player));
-        }
-        else {
-            this.openCrate(player, source, OpenOptions.empty(), cost);
-        }
+        this.openCrate(player, source, OpenOptions.empty(), cost);
     }
 
     public void multiOpenCrate(@NotNull Player player, @NotNull CrateSource source, @NotNull OpenOptions options, @Nullable Cost cost, int amount) {

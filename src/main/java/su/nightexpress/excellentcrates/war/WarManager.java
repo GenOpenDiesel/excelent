@@ -10,6 +10,7 @@ import su.nightexpress.excellentcrates.config.Config;
 import su.nightexpress.excellentcrates.config.Lang;
 import su.nightexpress.excellentcrates.crate.cost.Cost;
 import su.nightexpress.excellentcrates.crate.impl.Crate;
+import su.nightexpress.excellentcrates.util.FoliaTasks;
 import su.nightexpress.nightcore.manager.AbstractManager;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.time.TimeFormatType;
@@ -360,10 +361,11 @@ public class WarManager extends AbstractManager<CratesPlugin> {
                 targetScore.rewards, targetScore.pointsArray(),
                 challengerScore.rewards, challengerScore.pointsArray(), winnerName).start();
 
-            this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
+            Player schedulerOwner = finalWinner == null ? challenger : finalWinner;
+            FoliaTasks.runDelayed(this.plugin, schedulerOwner, () -> {
                 this.payout(challenger, target, challengerScore, targetScore, finalWinner);
                 this.sendResult(challenger, target, crate, challengerScore, targetScore, finalWinner);
-            }, WarBattleMenu.durationTicks(amount) + 20L);
+            }, () -> this.plugin.getLogger().warning("Could not finish crate war payout because the scheduler owner left before payout."), WarBattleMenu.durationTicks(amount) + 20L);
             return;
         }
 

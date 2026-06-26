@@ -30,6 +30,7 @@ import su.nightexpress.excellentcrates.hologram.HologramTemplate;
 import su.nightexpress.excellentcrates.registry.CratesRegistries;
 import su.nightexpress.excellentcrates.util.CrateUtils;
 import su.nightexpress.excellentcrates.util.ItemHelper;
+import su.nightexpress.excellentcrates.util.MiniMessageSanitizer;
 import su.nightexpress.excellentcrates.util.pos.WorldPos;
 import su.nightexpress.nightcore.bridge.currency.Currency;
 import su.nightexpress.nightcore.bridge.item.AdaptedItem;
@@ -576,7 +577,7 @@ public class Crate implements ConfigBacked {
     }
 
     public void setName(@NotNull String name) {
-        this.name = name;
+        this.name = MiniMessageSanitizer.sanitize(name);
     }
 
     @NotNull
@@ -585,7 +586,7 @@ public class Crate implements ConfigBacked {
     }
 
     public void setDescription(@NotNull List<String> description) {
-        this.description = description;
+        this.description = MiniMessageSanitizer.sanitize(description);
     }
 
     @NotNull

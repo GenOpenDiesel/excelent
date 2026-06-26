@@ -2,6 +2,7 @@ package su.nightexpress.excellentcrates.hologram;
 
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentcrates.Placeholders;
+import su.nightexpress.excellentcrates.util.MiniMessageSanitizer;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.config.Writeable;
 import su.nightexpress.nightcore.util.Lists;
@@ -22,7 +23,7 @@ public class HologramTemplate implements Writeable {
 
     public HologramTemplate(@NotNull String id, @NotNull List<String> text) {
         this.id = id.toLowerCase();
-        this.text = text;
+        this.text = MiniMessageSanitizer.sanitize(text);
     }
 
     @NotNull

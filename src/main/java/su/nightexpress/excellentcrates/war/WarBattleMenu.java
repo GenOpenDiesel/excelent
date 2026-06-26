@@ -8,12 +8,12 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentcrates.CratesPlugin;
 import su.nightexpress.excellentcrates.api.crate.Reward;
 import su.nightexpress.excellentcrates.crate.impl.Crate;
+import su.nightexpress.excellentcrates.util.FoliaTasks;
 import su.nightexpress.nightcore.util.ItemUtil;
 import su.nightexpress.nightcore.util.random.Rnd;
 
@@ -64,7 +64,7 @@ public class WarBattleMenu implements InventoryHolder {
     private ItemStack[] topStrip;
     private ItemStack[] bottomStrip;
 
-    private BukkitTask task;
+    private FoliaTasks.Scheduled task;
     private int round;
     private long roundElapsed;
     private int lastIndex = -1;
@@ -131,7 +131,7 @@ public class WarBattleMenu implements InventoryHolder {
         this.beginRound(0);
 
         this.viewer.openInventory(this.inventory);
-        this.task = Bukkit.getScheduler().runTaskTimer(this.plugin, this::tick, 1L, 1L);
+        this.task = FoliaTasks.runAtFixedRate(this.plugin, this.viewer, this::tick, this::cancel, 1L, 1L);
     }
 
     /** Pool of filler icons, each already annotated with its drop chance. */
